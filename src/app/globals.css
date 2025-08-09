@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-maroon-50: #fdf2f2;
+  --color-maroon-100: #fde8e8;
+  --color-maroon-200: #fbd5d5;
+  --color-maroon-300: #f8b4b4;
+  --color-maroon-400: #f98080;
+  --color-maroon-500: #f05252;
+  --color-maroon-600: #e02424;
+  --color-maroon-700: #8b0000;
+  --color-maroon-800: #6b0000;
+  --color-maroon-900: #4a0000;
+  --color-maroon-950: #2d0000;
+  --color-dark-maroon: #4a0000;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, sans-serif;
+}
+
+.btn-primary {
+  background-color: var(--color-maroon-700);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-maroon-800);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--color-maroon-700);
+  border: 1px solid var(--color-maroon-700);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #f3f4f6;
+}
+
+.nav-link {
+  color: #374151;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--color-maroon-700);
+}
+
+.nav-link-active {
+  color: var(--color-maroon-700);
+  font-weight: 600;
+}
