@@ -104,11 +104,11 @@ export default function TestAdmin() {
               <CardHeader>
                 <CardTitle
                   style={{
-                    color: result.success ? "#10B981" : "#EF4444",
+                    color: result.status === "success" ? "#10B981" : "#EF4444",
                     fontSize: "1.25rem",
                   }}
                 >
-                  {name} API {result.success ? "✅" : "❌"}
+                  {name} API {result.status === "success" ? "✅" : "❌"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
