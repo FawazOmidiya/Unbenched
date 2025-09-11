@@ -17,12 +17,15 @@ export default function TestAdmin() {
       const data = await response.json();
       setTestResults((prev) => ({
         ...prev,
-        [name]: { success: response.ok, data: data },
+        [name]: { status: response.ok ? "success" : "error", data: data },
       }));
     } catch (error) {
       setTestResults((prev) => ({
         ...prev,
-        [name]: { success: false, error: error.message },
+        [name]: {
+          status: "error",
+          error: error instanceof Error ? error.message : String(error),
+        },
       }));
     } finally {
       setLoading(false);
