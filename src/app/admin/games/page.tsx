@@ -40,7 +40,16 @@ export default function GamesAdmin() {
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingGame, setEditingGame] = useState(null);
+  const [editingGame, setEditingGame] = useState<{
+    id: number;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number;
+    awayScore: number;
+    sport: string;
+    date: string;
+    status: string;
+  } | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
