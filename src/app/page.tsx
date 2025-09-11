@@ -12,8 +12,13 @@ export default function Home() {
       <Navigation />
       <main>
         <Hero />
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem" }} className="lg:grid-cols-3">
+        <div
+          style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem" }}
+        >
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem" }}
+            className="lg:grid-cols-3"
+          >
             <div style={{ gridColumn: "span 2" }} className="lg:col-span-2">
               <TopStories />
             </div>

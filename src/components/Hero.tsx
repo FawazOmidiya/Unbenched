@@ -1,53 +1,69 @@
+import { Button } from "@/components/ui/button";
+
 export default function Hero() {
   return (
-    <section style={{
-      position: "relative",
-      background: "linear-gradient(to right, var(--color-maroon-700), var(--color-maroon-900))",
-      color: "white"
-    }}>
-      <div style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "black",
-        opacity: 0.4
-      }}></div>
-      <div style={{
+    <section
+      style={{
         position: "relative",
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "4rem 1rem"
-      }}>
+        background:
+          "linear-gradient(to right, var(--color-maroon-700), var(--color-maroon-900))",
+        color: "white",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "black",
+          opacity: 0.4,
+        }}
+      ></div>
+      <div
+        style={{
+          position: "relative",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "4rem 1rem",
+        }}
+      >
         <div style={{ maxWidth: "64rem" }}>
-          <h2 style={{
-            fontSize: "3rem",
-            fontWeight: "bold",
-            marginBottom: "1rem"
-          }}>
+          <h2
+            style={{
+              fontSize: "3rem",
+              fontWeight: "bold",
+              marginBottom: "1rem",
+            }}
+          >
             Welcome to Unbenched Athletics
           </h2>
-          <p style={{
-            fontSize: "1.25rem",
-            marginBottom: "2rem",
-            color: "#e5e7eb"
-          }}>
-            Home of the Unbenched Lords - Excellence in Sports, Leadership, and
+          <p
+            style={{
+              fontSize: "1.25rem",
+              marginBottom: "2rem",
+              color: "#e5e7eb",
+            }}
+          >
+            Home of the UTSC Maroons - Excellence in Sports, Leadership, and
             Community
           </p>
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem"
-          }} className="sm:flex-row">
-            <button className="btn-primary" style={{ fontSize: "1.125rem", padding: "0.75rem 2rem" }}>
+          {/* <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+            className="sm:flex-row"
+          >
+            <Button size="lg" className="text-lg px-8 py-3">
               View Schedule
-            </button>
-            <button className="btn-secondary" style={{ fontSize: "1.125rem", padding: "0.75rem 2rem" }}>
+            </Button>
+            <Button variant="secondary" size="lg" className="text-lg px-8 py-3">
               Buy Tickets
-            </button>
-          </div>
+            </Button>
+          </div> */}
         </div>
       </div>
     </section>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,53 +14,49 @@ export default function Header() {
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            height: "4rem",
-          }}
-        >
+      <div
+        style={{
+          margin: "0 auto",
+          padding: "2rem 2rem",
+        }}
+      >
+        <div className="flex flex-row justify-between items-center h-4">
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
             <div
               style={{
-                width: "3rem",
-                height: "3rem",
-                backgroundColor: "var(--color-maroon-700)",
-                borderRadius: "50%",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                alignItems: "left",
+                gap: "1rem",
+                cursor: "pointer",
               }}
             >
-              <span
+              <div
                 style={{
-                  color: "white",
-                  fontWeight: "bold",
-                  fontSize: "1.125rem",
+                  width: "15rem",
+                  height: "5rem",
+                  overflow: "hidden",
+                  position: "relative",
+                  transition: "transform 0.2s ease",
                 }}
               >
-                U
-              </span>
+                <img
+                  src="/IMG_6304.jpeg"
+                  alt="UTSC Maroons Logo"
+                  style={{
+                    width: "20rem",
+                    height: "20rem",
+                    objectFit: "cover",
+                    objectPosition: "center center",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%) scale(1.5)",
+                  }}
+                />
+              </div>
             </div>
-            <div>
-              <h1
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "var(--color-maroon-700)",
-                }}
-              >
-                Unbenched Athletics
-              </h1>
-              <p style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                The Official Website of the Unbenched Lords
-              </p>
-            </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav
@@ -80,11 +78,10 @@ export default function Header() {
             <a href="#" className="nav-link">
               Shop
             </a>
-            <button className="btn-primary">Donate</button>
           </nav>
 
           {/* Mobile menu button */}
-          <button
+          {/* <button
             style={{ display: "block", padding: "0.5rem" }}
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -102,7 +99,7 @@ export default function Header() {
                 d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
-          </button>
+          </button> */}
         </div>
 
         {/* Mobile Navigation */}
@@ -134,9 +131,6 @@ export default function Header() {
               <a href="#" className="nav-link">
                 Shop
               </a>
-              <button className="btn-primary" style={{ width: "100%" }}>
-                Donate
-              </button>
             </nav>
           </div>
         )}

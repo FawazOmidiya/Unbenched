@@ -1,120 +1,214 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Game } from "@/lib/supabase";
+
 export default function Scoreboard() {
-  const recentGames = [
-    {
-      id: 1,
-      homeTeam: "Unbenched Lords",
-      awayTeam: "Rival College",
-      homeScore: 85,
-      awayScore: 72,
-      sport: "Basketball",
-      date: "Dec 15, 2024",
-      status: "Final",
-    },
-    {
-      id: 2,
-      homeTeam: "Unbenched Lords",
-      awayTeam: "State University",
-      homeScore: 2,
-      awayScore: 1,
-      sport: "Soccer",
-      date: "Dec 12, 2024",
-      status: "Final",
-    },
-    {
-      id: 3,
-      homeTeam: "Unbenched Lords",
-      awayTeam: "City College",
-      homeScore: 3,
-      awayScore: 0,
-      sport: "Volleyball",
-      date: "Dec 10, 2024",
-      status: "Final",
-    },
-  ];
+  const [recentGames, setRecentGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const response = await fetch("/api/games");
+        if (response.ok) {
+          const data = await response.json();
+          // Get the 3 most recent games
+          setRecentGames(data.slice(0, 3));
+        }
+      } catch (error) {
+        console.error("Failed to fetch games:", error);
+        // Fallback to static data if API fails
+        setRecentGames([
+          {
+            id: 1,
+            home_team: "Unbenched Lords",
+            away_team: "Rival College",
+            home_score: 85,
+            away_score: 72,
+            sport: "Basketball",
+            date: "2024-12-15",
+            status: "final",
+            created_at: "2024-12-15T00:00:00Z",
+            updated_at: "2024-12-15T00:00:00Z",
+          },
+          {
+            id: 2,
+            home_team: "Unbenched Lords",
+            away_team: "State University",
+            home_score: 2,
+            away_score: 1,
+            sport: "Soccer",
+            date: "2024-12-12",
+            status: "final",
+            created_at: "2024-12-12T00:00:00Z",
+            updated_at: "2024-12-12T00:00:00Z",
+          },
+          {
+            id: 3,
+            home_team: "Unbenched Lords",
+            away_team: "City College",
+            home_score: 3,
+            away_score: 0,
+            sport: "Volleyball",
+            date: "2024-12-10",
+            status: "final",
+            created_at: "2024-12-10T00:00:00Z",
+            updated_at: "2024-12-10T00:00:00Z",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGames();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle style={{ color: "#8b0000" }}>Scoreboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}
+          >
+            Loading games...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div style={{
-      backgroundColor: "white",
-      borderRadius: "0.5rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-      padding: "1.5rem"
-    }}>
-      <h3 style={{
-        fontSize: "1.5rem",
-        fontWeight: "bold",
-        color: "var(--color-maroon-700)",
-        marginBottom: "1.5rem"
-      }}>Scoreboard</h3>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {recentGames.map((game) => (
-          <div key={game.id} style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: "0.5rem",
-            padding: "1rem"
-          }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.5rem"
-            }}>
-              <span style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#6b7280"
-              }}>{game.sport}</span>
-              <span style={{
-                fontSize: "0.75rem",
-                color: "#6b7280"
-              }}>{game.date}</span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <span style={{ fontWeight: "600" }}>{game.homeTeam}</span>
-                <span style={{
-                  fontSize: "1.125rem",
-                  fontWeight: "bold"
-                }}>{game.homeScore}</span>
+    <Card>
+      <CardHeader>
+        <CardTitle style={{ color: "#8b0000" }}>Scoreboard</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {recentGames.map((game) => (
+            <div
+              key={game.id}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+                padding: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: "#6b7280",
+                  }}
+                >
+                  {game.sport}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#6b7280",
+                  }}
+                >
+                  {game.date
+                    ? new Date(game.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : ""}
+                </span>
               </div>
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <span style={{ fontWeight: "600" }}>{game.awayTeam}</span>
-                <span style={{
-                  fontSize: "1.125rem",
-                  fontWeight: "bold"
-                }}>{game.awayScore}</span>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontWeight: "600" }}>{game.home_team}</span>
+                  <span
+                    style={{
+                      fontSize: "1.125rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {game.home_score}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontWeight: "600" }}>{game.away_team}</span>
+                  <span
+                    style={{
+                      fontSize: "1.125rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {game.away_score}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "0.75rem",
+                  paddingTop: "0.75rem",
+                  borderTop: "1px solid #e5e7eb",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: "600",
+                    color:
+                      game.status === "final"
+                        ? "#4CAF50"
+                        : game.status === "live"
+                        ? "#FF9800"
+                        : "#2196F3",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {game.status}
+                </span>
               </div>
             </div>
+          ))}
+        </div>
 
-            <div style={{
-              marginTop: "0.75rem",
-              paddingTop: "0.75rem",
-              borderTop: "1px solid #e5e7eb"
-            }}>
-              <span style={{
-                fontSize: "0.75rem",
-                fontWeight: "600",
-                color: "#4CAF50"
-              }}>{game.status}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: "1.5rem" }}>
-        <button className="btn-secondary" style={{ width: "100%" }}>
-          View Full Schedule
-        </button>
-      </div>
-    </div>
+        <div style={{ marginTop: "1.5rem" }}>
+          <Button variant="secondary" className="w-full">
+            View Full Schedule
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
