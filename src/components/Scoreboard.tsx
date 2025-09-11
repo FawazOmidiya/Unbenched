@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Game } from "@/lib/supabase";
+import { Game, createSupabaseClient } from "@/lib/supabase";
 
 export default function Scoreboard() {
   const [recentGames, setRecentGames] = useState<Game[]>([]);
@@ -12,11 +12,17 @@ export default function Scoreboard() {
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const response = await fetch("/api/games");
-        if (response.ok) {
-          const data = await response.json();
-          // Get the 3 most recent games
-          setRecentGames(data.slice(0, 3));
+        const supabase = createSupabaseClient();
+        const { data: gamesData, error } = await supabase
+          .from("games")
+          .select("*")
+          .order("date", { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error("Failed to fetch games:", error);
+        } else {
+          setRecentGames(gamesData || []);
         }
       } catch (error) {
         console.error("Failed to fetch games:", error);

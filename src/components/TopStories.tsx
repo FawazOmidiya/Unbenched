@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Story } from "@/lib/supabase";
+import { Story, createSupabaseClient } from "@/lib/supabase";
 
 export default function TopStories() {
   const [stories, setStories] = useState<Story[]>([]);
@@ -11,10 +11,16 @@ export default function TopStories() {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await fetch("/api/stories");
-        if (response.ok) {
-          const data = await response.json();
-          setStories(data);
+        const supabase = createSupabaseClient();
+        const { data: storiesData, error } = await supabase
+          .from("stories")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Failed to fetch stories:", error);
+        } else {
+          setStories(storiesData || []);
         }
       } catch (error) {
         console.error("Failed to fetch stories:", error);

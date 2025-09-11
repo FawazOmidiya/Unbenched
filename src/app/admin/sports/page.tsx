@@ -45,9 +45,21 @@ export default function SportsAdmin() {
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSport, setEditingSport] = useState(null);
+  const [editingSport, setEditingSport] = useState<{
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    imageUrl: string;
+  } | null>(null);
   const [showPlayersModal, setShowPlayersModal] = useState(false);
-  const [selectedSport, setSelectedSport] = useState(null);
+  const [selectedSport, setSelectedSport] = useState<{
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    imageUrl: string;
+  } | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -147,7 +159,13 @@ export default function SportsAdmin() {
     resetPlayerForm();
   };
 
-  const handleManagePlayers = async (sport) => {
+  const handleManagePlayers = async (sport: {
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    imageUrl: string;
+  }) => {
     setSelectedSport(sport);
     setShowPlayersModal(true);
 
@@ -207,7 +225,10 @@ export default function SportsAdmin() {
       }
     } catch (error) {
       console.error("Failed to add player:", error);
-      alert("Failed to add player: " + error.message);
+      alert(
+        "Failed to add player: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   };
 
@@ -269,11 +290,14 @@ export default function SportsAdmin() {
       resetPlayerForm();
     } catch (error) {
       console.error("Failed to update player:", error);
-      alert("Failed to update player: " + error.message);
+      alert(
+        "Failed to update player: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   };
 
-  const handleDeletePlayer = async (playerId) => {
+  const handleDeletePlayer = async (playerId: number) => {
     if (confirm("Are you sure you want to delete this player?")) {
       try {
         const supabase = createSupabaseClient();
@@ -291,7 +315,10 @@ export default function SportsAdmin() {
         }
       } catch (error) {
         console.error("Failed to delete player:", error);
-        alert("Failed to delete player: " + error.message);
+        alert(
+          "Failed to delete player: " +
+            (error instanceof Error ? error.message : String(error))
+        );
       }
     }
   };
