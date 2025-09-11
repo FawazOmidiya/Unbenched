@@ -571,8 +571,8 @@ export default function SportsAdmin() {
                       }}
                     >
                       <option value="">Select Category</option>
-                      <option value="mens">Men's Sports</option>
-                      <option value="womens">Women's Sports</option>
+                      <option value="mens">Men&apos;s Sports</option>
+                      <option value="womens">Women&apos;s Sports</option>
                       <option value="other">Other Sports</option>
                     </select>
                   </div>

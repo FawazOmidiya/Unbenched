@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 
 export default function Navigation() {
-  const [activeSport, setActiveSport] = useState("");
+  const [] = useState("");
 
   const sports = [
     {

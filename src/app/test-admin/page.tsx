@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function TestAdmin() {
-  const [testResults, setTestResults] = useState<any>({});
+  const [testResults, setTestResults] = useState<
+    Record<string, { status: string; data?: unknown; error?: string }>
+  >({});
   const [loading, setLoading] = useState(false);
 
   const testAPI = async (endpoint: string, name: string) => {
