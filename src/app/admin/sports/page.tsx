@@ -159,6 +159,170 @@ export default function SportsAdmin() {
     resetPlayerForm();
   };
 
+  // Handle sport deletion
+  const handleDeleteSport = async (sport: Sport) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this sport? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const supabase = createSupabaseClient();
+
+      // First, delete all players associated with this sport
+      const { error: playersError } = await supabase
+        .from("players")
+        .delete()
+        .eq("sport_id", sport.id);
+
+      if (playersError) {
+        console.error("Failed to delete players:", playersError);
+        alert("Failed to delete associated players: " + playersError.message);
+        return;
+      }
+
+      // Then delete the sport itself
+      const { error: sportError } = await supabase
+        .from("sports")
+        .delete()
+        .eq("id", sport.id);
+
+      if (sportError) {
+        console.error("Failed to delete sport:", sportError);
+        alert("Failed to delete sport: " + sportError.message);
+        return;
+      }
+
+      // Update local state
+      setSports(sports.filter((s) => s.id !== sport.id));
+      alert("Sport deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete sport:", error);
+      alert(
+        "Failed to delete sport: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+  };
+
+  // Handle adding a new sport
+  const handleAddSport = async (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const category = formData.get("category") as string;
+    const description = formData.get("description") as string;
+    const imageUrl = formData.get("imageUrl") as string;
+
+    if (!name || !category) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      const supabase = createSupabaseClient();
+
+      // Generate slug from name
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .trim();
+
+      const { data: newSport, error } = await supabase
+        .from("sports")
+        .insert([
+          {
+            name,
+            category,
+            description: description || null,
+            image_url: imageUrl || null,
+            slug,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Failed to add sport:", error);
+        alert("Failed to add sport: " + error.message);
+        return;
+      }
+
+      // Update local state
+      setSports([...sports, newSport]);
+      setShowAddForm(false);
+      alert("Sport added successfully!");
+    } catch (error) {
+      console.error("Failed to add sport:", error);
+      alert(
+        "Failed to add sport: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+  };
+
+  // Handle updating an existing sport
+  const handleUpdateSport = async (e: React.FormEvent<HTMLFormElement>) => {
+    if (!editingSport) return;
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const category = formData.get("category") as string;
+    const description = formData.get("description") as string;
+    const imageUrl = formData.get("imageUrl") as string;
+
+    if (!name || !category) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      const supabase = createSupabaseClient();
+
+      // Generate slug from name
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .trim();
+
+      const { data: updatedSport, error } = await supabase
+        .from("sports")
+        .update({
+          name,
+          category,
+          description: description || null,
+          image_url: imageUrl || null,
+          slug,
+        })
+        .eq("id", editingSport.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Failed to update sport:", error);
+        alert("Failed to update sport: " + error.message);
+        return;
+      }
+
+      // Update local state
+      setSports(
+        sports.map((s) => (s.id === editingSport.id ? updatedSport : s))
+      );
+      setEditingSport(null);
+      alert("Sport updated successfully!");
+    } catch (error) {
+      console.error("Failed to update sport:", error);
+      alert(
+        "Failed to update sport: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+  };
+
   const handleManagePlayers = async (sport: Sport) => {
     setSelectedSport(sport);
     setShowPlayersModal(true);
@@ -526,15 +690,7 @@ export default function SportsAdmin() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this sport?"
-                            )
-                          ) {
-                            setSports(sports.filter((s) => s.id !== sport.id));
-                          }
-                        }}
+                        onClick={() => handleDeleteSport(sport)}
                       >
                         Delete
                       </Button>
@@ -587,6 +743,14 @@ export default function SportsAdmin() {
               </CardHeader>
               <CardContent>
                 <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (editingSport) {
+                      await handleUpdateSport(e);
+                    } else {
+                      await handleAddSport(e);
+                    }
+                  }}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -605,6 +769,7 @@ export default function SportsAdmin() {
                     </label>
                     <input
                       type="text"
+                      name="name"
                       defaultValue={editingSport?.name || ""}
                       style={{
                         width: "100%",
@@ -627,6 +792,7 @@ export default function SportsAdmin() {
                       Category
                     </label>
                     <select
+                      name="category"
                       defaultValue={editingSport?.category || ""}
                       style={{
                         width: "100%",
@@ -654,6 +820,7 @@ export default function SportsAdmin() {
                       Description
                     </label>
                     <textarea
+                      name="description"
                       defaultValue={editingSport?.description || ""}
                       rows={3}
                       style={{
@@ -679,6 +846,7 @@ export default function SportsAdmin() {
                     </label>
                     <input
                       type="url"
+                      name="imageUrl"
                       defaultValue={editingSport?.image_url || ""}
                       style={{
                         width: "100%",
