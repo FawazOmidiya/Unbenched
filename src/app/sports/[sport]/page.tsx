@@ -248,39 +248,96 @@ export default function SportPage({
                       key={player.id}
                       style={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
+                        gap: "1rem",
+                        alignItems: "flex-start",
                         padding: "1rem",
                         border: "1px solid #e5e7eb",
                         borderRadius: "0.5rem",
                       }}
                     >
-                      <div style={{ flex: 1 }}>
+                      {/* Player Photo */}
+                      <div
+                        style={{
+                          width: "300px",
+                          height: "300px",
+                          borderRadius: "0.5rem",
+                          overflow: "hidden",
+                          backgroundColor: "#f3f4f6",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {player.photo_url ? (
+                          <img
+                            src={player.photo_url}
+                            alt={`${player.name} photo`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              color: "#9ca3af",
+                              fontSize: "1.5rem",
+                            }}
+                          >
+                            👤
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Player Info */}
+                      <div style={{ flex: 1, padding: "0.5rem 0" }}>
                         <div
-                          style={{ fontWeight: "600", fontSize: "1.125rem" }}
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "1.5rem",
+                            marginBottom: "0.75rem",
+                            color: "#1f2937",
+                          }}
                         >
                           #{player.number} {player.name}
                         </div>
-                        <div style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                        <div
+                          style={{
+                            color: "#4b5563",
+                            fontSize: "1.125rem",
+                            marginBottom: "1rem",
+                            fontWeight: "500",
+                          }}
+                        >
                           {player.position} • {player.year}
                         </div>
                         <div
                           style={{
                             display: "flex",
-                            gap: "1rem",
-                            marginTop: "0.5rem",
+                            gap: "1.5rem",
+                            marginBottom: "1rem",
                           }}
                         >
                           {player.height && (
                             <span
-                              style={{ color: "#6b7280", fontSize: "0.75rem" }}
+                              style={{
+                                color: "#6b7280",
+                                fontSize: "1rem",
+                                fontWeight: "500",
+                              }}
                             >
                               {player.height}
                             </span>
                           )}
                           {player.weight && (
                             <span
-                              style={{ color: "#6b7280", fontSize: "0.75rem" }}
+                              style={{
+                                color: "#6b7280",
+                                fontSize: "1rem",
+                                fontWeight: "500",
+                              }}
                             >
                               {player.weight}
                             </span>
@@ -290,8 +347,9 @@ export default function SportPage({
                           <div
                             style={{
                               color: "#6b7280",
-                              fontSize: "0.75rem",
-                              marginTop: "0.25rem",
+                              fontSize: "1rem",
+                              marginBottom: "0.75rem",
+                              fontWeight: "500",
                             }}
                           >
                             {player.major}
@@ -299,7 +357,12 @@ export default function SportPage({
                         )}
                         {player.hometown && (
                           <div
-                            style={{ color: "#6b7280", fontSize: "0.75rem" }}
+                            style={{
+                              color: "#6b7280",
+                              fontSize: "1rem",
+                              marginBottom: "0.75rem",
+                              fontWeight: "500",
+                            }}
                           >
                             {player.hometown}
                           </div>
@@ -308,9 +371,11 @@ export default function SportPage({
                           <div
                             style={{
                               color: "#6b7280",
-                              fontSize: "0.75rem",
-                              marginTop: "0.5rem",
+                              fontSize: "1rem",
+                              marginTop: "0.75rem",
                               fontStyle: "italic",
+                              lineHeight: "1.5",
+                              fontWeight: "400",
                             }}
                           >
                             {player.bio}
@@ -323,11 +388,43 @@ export default function SportPage({
                   <div
                     style={{
                       textAlign: "center",
-                      padding: "2rem",
+                      padding: "3rem 2rem",
                       color: "#6b7280",
+                      backgroundColor: "#f9fafb",
+                      borderRadius: "0.5rem",
+                      border: "2px dashed #d1d5db",
                     }}
                   >
-                    No players found for this team.
+                    <div
+                      style={{
+                        fontSize: "3rem",
+                        marginBottom: "1rem",
+                        opacity: 0.5,
+                      }}
+                    >
+                      ⚽️
+                    </div>
+                    <h3
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      Roster Coming Soon
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: "1rem",
+                        lineHeight: "1.5",
+                        maxWidth: "400px",
+                        margin: "0 auto",
+                      }}
+                    >
+                      The {sportName} team roster is being finalized. Check back
+                      soon to meet the players!
+                    </p>
                   </div>
                 )}
               </div>
@@ -354,7 +451,7 @@ export default function SportPage({
               Upcoming Games
             </h2>
 
-            <div
+            {/* <div
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
             >
               {upcomingGames.map((game, index) => (
@@ -394,19 +491,19 @@ export default function SportPage({
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
 
-            <button
+            {/* <button
               className="btn-primary"
               style={{ width: "100%", marginTop: "1rem" }}
             >
               Buy Tickets
-            </button>
+            </button> */}
           </div>
         </div>
 
         {/* Team Information */}
-        <div
+        {/* <div
           style={{
             backgroundColor: "white",
             borderRadius: "0.5rem",
@@ -465,7 +562,7 @@ export default function SportPage({
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </main>
 
       <Footer />

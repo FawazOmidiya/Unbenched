@@ -24,57 +24,7 @@ export default function TopStories() {
         }
       } catch (error) {
         console.error("Failed to fetch stories:", error);
-        // Fallback to static data if API fails
-        setStories([
-          {
-            id: 1,
-            title: "Lords Basketball Team Advances to Championship Finals",
-            excerpt:
-              "The Unbenched Lords basketball team secured their spot in the championship finals with an impressive victory over their rivals...",
-            image_url: "/api/placeholder/400/250",
-            date: "2024-12-16",
-            category: "Basketball",
-            featured: true,
-            created_at: "2024-12-16T00:00:00Z",
-            updated_at: "2024-12-16T00:00:00Z",
-          },
-          {
-            id: 2,
-            title: "New Athletic Director Announced",
-            excerpt:
-              "The university is pleased to announce the appointment of a new Athletic Director who brings years of experience...",
-            image_url: "/api/placeholder/400/250",
-            date: "2024-12-14",
-            category: "Administration",
-            featured: false,
-            created_at: "2024-12-14T00:00:00Z",
-            updated_at: "2024-12-14T00:00:00Z",
-          },
-          {
-            id: 3,
-            title: "Soccer Team Wins Conference Title",
-            excerpt:
-              "The Lords soccer team captured their third consecutive conference championship with a dominant performance...",
-            image_url: "/api/placeholder/400/250",
-            date: "2024-12-12",
-            category: "Soccer",
-            featured: false,
-            created_at: "2024-12-12T00:00:00Z",
-            updated_at: "2024-12-12T00:00:00Z",
-          },
-          {
-            id: 4,
-            title: "Student-Athlete Academic Excellence Awards",
-            excerpt:
-              "Twenty-five student-athletes were recognized for their outstanding academic achievements this semester...",
-            image_url: "/api/placeholder/400/250",
-            date: "2024-12-10",
-            category: "Academics",
-            featured: false,
-            created_at: "2024-12-10T00:00:00Z",
-            updated_at: "2024-12-10T00:00:00Z",
-          },
-        ]);
+        setStories([]);
       } finally {
         setLoading(false);
       }
@@ -119,104 +69,52 @@ export default function TopStories() {
         Top Stories
       </h2>
 
-      {/* Featured Story */}
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: "0.5rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-          overflow: "hidden",
-        }}
-      >
+      {stories.length === 0 ? (
         <div
           style={{
-            aspectRatio: "16/9",
-            background:
-              "linear-gradient(to bottom right, var(--color-maroon-100), var(--color-maroon-200))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            textAlign: "center",
+            padding: "3rem 2rem",
+            color: "#6b7280",
+            backgroundColor: "#f9fafb",
+            borderRadius: "0.5rem",
+            border: "2px dashed #d1d5db",
           }}
         >
-          <span
-            style={{
-              color: "var(--color-maroon-700)",
-              fontWeight: "500",
-            }}
-          >
-            Featured Image
-          </span>
-        </div>
-        <div style={{ padding: "1.5rem" }}>
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-              marginBottom: "0.75rem",
+              fontSize: "3rem",
+              marginBottom: "1rem",
+              opacity: 0.5,
             }}
           >
-            <span
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "var(--color-maroon-700)",
-                backgroundColor: "var(--color-maroon-100)",
-                padding: "0.25rem 0.75rem",
-                borderRadius: "9999px",
-              }}
-            >
-              {featuredStory?.category}
-            </span>
-            <span
-              style={{
-                fontSize: "0.875rem",
-                color: "#6b7280",
-              }}
-            >
-              {featuredStory?.date
-                ? new Date(featuredStory.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : ""}
-            </span>
+            📰
           </div>
           <h3
             style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: "#111827",
-              marginBottom: "0.75rem",
+              fontSize: "1.25rem",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "0.5rem",
             }}
           >
-            {featuredStory?.title}
+            No Stories Yet
           </h3>
           <p
             style={{
-              color: "#6b7280",
-              marginBottom: "1rem",
+              fontSize: "1rem",
+              lineHeight: "1.5",
+              maxWidth: "400px",
+              margin: "0 auto",
             }}
           >
-            {featuredStory?.excerpt}
+            Check back soon for the latest news and updates from UTSC Maroons
+            Athletics!
           </p>
-          <Button>Read More</Button>
         </div>
-      </div>
-
-      {/* Other Stories Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: "1.5rem",
-        }}
-        className="md:grid-cols-2"
-      >
-        {otherStories.map((story) => (
+      ) : (
+        <>
+          {/* Featured Story */}
           <div
-            key={story.id}
             style={{
               backgroundColor: "white",
               borderRadius: "0.5rem",
@@ -240,38 +138,38 @@ export default function TopStories() {
                   fontWeight: "500",
                 }}
               >
-                Story Image
+                Featured Image
               </span>
             </div>
-            <div style={{ padding: "1rem" }}>
+            <div style={{ padding: "1.5rem" }}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "1rem",
-                  marginBottom: "0.5rem",
+                  marginBottom: "0.75rem",
                 }}
               >
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.875rem",
                     fontWeight: "600",
                     color: "var(--color-maroon-700)",
                     backgroundColor: "var(--color-maroon-100)",
-                    padding: "0.125rem 0.5rem",
+                    padding: "0.25rem 0.75rem",
                     borderRadius: "9999px",
                   }}
                 >
-                  {story.category}
+                  {featuredStory?.category}
                 </span>
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.875rem",
                     color: "#6b7280",
                   }}
                 >
-                  {story.date
-                    ? new Date(story.date).toLocaleDateString("en-US", {
+                  {featuredStory?.date
+                    ? new Date(featuredStory.date).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -279,47 +177,145 @@ export default function TopStories() {
                     : ""}
                 </span>
               </div>
-              <h4
+              <h3
                 style={{
-                  fontSize: "1.125rem",
+                  fontSize: "1.5rem",
                   fontWeight: "bold",
                   color: "#111827",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {story.title}
-              </h4>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#6b7280",
                   marginBottom: "0.75rem",
                 }}
               >
-                {story.excerpt}
-              </p>
-              <button
+                {featuredStory?.title}
+              </h3>
+              <p
                 style={{
-                  color: "var(--color-maroon-700)",
-                  fontWeight: "600",
-                  fontSize: "0.875rem",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
+                  color: "#6b7280",
+                  marginBottom: "1rem",
                 }}
               >
-                Read More →
-              </button>
+                {featuredStory?.excerpt}
+              </p>
+              <Button>Read More</Button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* View All Stories Button */}
-      <div style={{ textAlign: "center" }}>
-        <Button variant="secondary">View All Stories</Button>
-      </div>
+          {/* Other Stories Grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr",
+              gap: "1.5rem",
+            }}
+            className="md:grid-cols-2"
+          >
+            {otherStories.map((story) => (
+              <div
+                key={story.id}
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: "0.5rem",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    aspectRatio: "16/9",
+                    background:
+                      "linear-gradient(to bottom right, var(--color-maroon-100), var(--color-maroon-200))",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "var(--color-maroon-700)",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Story Image
+                  </span>
+                </div>
+                <div style={{ padding: "1rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "1rem",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: "var(--color-maroon-700)",
+                        backgroundColor: "var(--color-maroon-100)",
+                        padding: "0.125rem 0.5rem",
+                        borderRadius: "9999px",
+                      }}
+                    >
+                      {story.category}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#6b7280",
+                      }}
+                    >
+                      {story.date
+                        ? new Date(story.date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : ""}
+                    </span>
+                  </div>
+                  <h4
+                    style={{
+                      fontSize: "1.125rem",
+                      fontWeight: "bold",
+                      color: "#111827",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    {story.title}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#6b7280",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {story.excerpt}
+                  </p>
+                  <button
+                    style={{
+                      color: "var(--color-maroon-700)",
+                      fontWeight: "600",
+                      fontSize: "0.875rem",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    Read More →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* View All Stories Button */}
+          <div style={{ textAlign: "center" }}>
+            <Button variant="secondary">View All Stories</Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createSupabaseClient, Player } from "@/lib/supabase";
+import { createSupabaseClient, Player, Sport } from "@/lib/supabase";
+import PhotoUpload, { uploadPlayerPhoto } from "@/components/PhotoUpload";
 
 // Type for player form data
 interface PlayerFormData {
@@ -17,52 +18,21 @@ interface PlayerFormData {
   year: string;
   hometown: string;
   major: string;
+  photo_url: string;
 }
 
 export default function SportsAdmin() {
-  const [sports, setSports] = useState([
-    {
-      id: 1,
-      name: "Men's Basketball",
-      category: "mens",
-      description: "Men's basketball team competing in the conference",
-      imageUrl: "/api/placeholder/300/200",
-    },
-    {
-      id: 2,
-      name: "Women's Soccer",
-      category: "womens",
-      description: "Women's soccer team with championship aspirations",
-      imageUrl: "/api/placeholder/300/200",
-    },
-    {
-      id: 3,
-      name: "Golf",
-      category: "other",
-      description: "Co-ed golf team participating in tournaments",
-      imageUrl: "/api/placeholder/300/200",
-    },
-  ]);
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSport, setEditingSport] = useState<{
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    imageUrl: string;
-  } | null>(null);
+  const [editingSport, setEditingSport] = useState<Sport | null>(null);
   const [showPlayersModal, setShowPlayersModal] = useState(false);
-  const [selectedSport, setSelectedSport] = useState<{
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    imageUrl: string;
-  } | null>(null);
+  const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [showAddPlayerForm, setShowAddPlayerForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Form state for player management
   const [playerFormData, setPlayerFormData] = useState<PlayerFormData>({
@@ -75,7 +45,34 @@ export default function SportsAdmin() {
     year: "",
     hometown: "",
     major: "",
+    photo_url: "",
   });
+
+  // Fetch sports from database
+  useEffect(() => {
+    const fetchSports = async () => {
+      try {
+        const supabase = createSupabaseClient();
+        const { data: sportsData, error } = await supabase
+          .from("sports")
+          .select("*")
+          .order("name", { ascending: true });
+
+        if (error) {
+          console.error("Failed to fetch sports:", error);
+          return;
+        }
+
+        setSports(sportsData || []);
+      } catch (error) {
+        console.error("Failed to fetch sports:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSports();
+  }, []);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -115,7 +112,9 @@ export default function SportsAdmin() {
       year: "",
       hometown: "",
       major: "",
+      photo_url: "",
     });
+    setSelectedFile(null);
   };
 
   const populatePlayerForm = (player: Player) => {
@@ -129,6 +128,7 @@ export default function SportsAdmin() {
       year: player.year || "",
       hometown: player.hometown || "",
       major: player.major || "",
+      photo_url: player.photo_url || "",
     });
   };
 
@@ -159,13 +159,7 @@ export default function SportsAdmin() {
     resetPlayerForm();
   };
 
-  const handleManagePlayers = async (sport: {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    imageUrl: string;
-  }) => {
+  const handleManagePlayers = async (sport: Sport) => {
     setSelectedSport(sport);
     setShowPlayersModal(true);
 
@@ -194,7 +188,7 @@ export default function SportsAdmin() {
     try {
       const supabase = createSupabaseClient();
 
-      // Prepare the payload with proper types
+      // Prepare the payload with proper types (without photo_url initially)
       const playerPayload = {
         sport_id: selectedSport.id,
         name: playerFormData.name,
@@ -209,6 +203,7 @@ export default function SportsAdmin() {
         is_active: true,
       };
 
+      // Step 1: Create the player first
       const { data: newPlayer, error } = await supabase
         .from("players")
         .insert([playerPayload])
@@ -218,11 +213,45 @@ export default function SportsAdmin() {
       if (error) {
         console.error("Failed to add player:", error);
         alert("Failed to add player: " + error.message);
-      } else {
-        setPlayers([...players, newPlayer]);
-        setShowAddPlayerForm(false);
-        resetPlayerForm();
+        return;
       }
+
+      // Step 2: If there's a selected file, upload it using the player ID
+      if (selectedFile) {
+        try {
+          const photoUrl = await uploadPlayerPhoto(
+            selectedFile,
+            selectedSport.id,
+            newPlayer.id
+          );
+
+          // Step 3: Update the player record with the photo URL
+          const { data: updatedPlayer, error: updateError } = await supabase
+            .from("players")
+            .update({ photo_url: photoUrl })
+            .eq("id", newPlayer.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error(
+              "Failed to update player with photo URL:",
+              updateError
+            );
+            // Continue with the player without photo
+          } else {
+            // Use the updated player data
+            newPlayer.photo_url = updatedPlayer.photo_url;
+          }
+        } catch (uploadError) {
+          console.error("Failed to upload photo:", uploadError);
+          // Continue anyway, the player was created successfully
+        }
+      }
+
+      setPlayers([...players, newPlayer]);
+      setShowAddPlayerForm(false);
+      resetPlayerForm();
     } catch (error) {
       console.error("Failed to add player:", error);
       alert(
@@ -238,8 +267,10 @@ export default function SportsAdmin() {
     try {
       const supabase = createSupabaseClient();
 
-      // Prepare the payload with proper types
+      // Prepare the payload with the ID for upsert
       const playerPayload = {
+        id: editingPlayer.id,
+        sport_id: editingPlayer.sport_id,
         name: playerFormData.name,
         number: playerFormData.number,
         position: playerFormData.position || null,
@@ -249,47 +280,38 @@ export default function SportsAdmin() {
         year: playerFormData.year || null,
         hometown: playerFormData.hometown || null,
         major: playerFormData.major || null,
+        photo_url: playerFormData.photo_url || null,
+        is_active: editingPlayer.is_active,
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Updating player with ID:", editingPlayer.id);
+      console.log("Upserting player with ID:", editingPlayer.id);
       console.log("Payload:", playerPayload);
 
-      // First, try to update without .single() to see what we get
-      const { data: updatedPlayers, error } = await supabase
+      const { data: upsertedPlayer, error } = await supabase
         .from("players")
-        .update(playerPayload)
-        .eq("id", editingPlayer.id)
-        .select();
+        .upsert(playerPayload);
 
       if (error) {
-        console.error("Failed to update player:", error);
-        alert("Failed to update player: " + error.message);
+        console.error("Failed to upsert player:", error);
+        alert(
+          "Failed to update player: " +
+            (error instanceof Error ? error.message : String(error))
+        );
         return;
       }
 
-      if (!updatedPlayers || updatedPlayers.length === 0) {
-        console.error("No player found with ID:", editingPlayer.id);
-        alert("Player not found. Please refresh and try again.");
-        return;
-      }
-
-      if (updatedPlayers.length > 1) {
-        console.error("Multiple players found with ID:", editingPlayer.id);
-        alert("Multiple players found. Please refresh and try again.");
-        return;
-      }
-
-      const updatedPlayer = updatedPlayers[0];
-      console.log("Player updated successfully:", updatedPlayer);
+      console.log("Player upserted successfully:", upsertedPlayer);
 
       setPlayers(
-        players.map((p) => (p.id === editingPlayer.id ? updatedPlayer : p))
+        players.map((p) =>
+          p.id === editingPlayer.id ? upsertedPlayer || p : p
+        )
       );
       setEditingPlayer(null);
       resetPlayerForm();
     } catch (error) {
-      console.error("Failed to update player:", error);
+      console.error("Failed to upsert player:", error);
       alert(
         "Failed to update player: " +
           (error instanceof Error ? error.message : String(error))
@@ -409,113 +431,130 @@ export default function SportsAdmin() {
         </div>
 
         {/* Sports Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "1.5rem",
-          }}
-        >
-          {sports.map((sport) => (
-            <Card key={sport.id}>
-              <div
-                style={{
-                  aspectRatio: "16/9",
-                  backgroundColor: "#f3f4f6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "2rem",
-                }}
-              >
-                ⚽
-              </div>
-              <CardContent style={{ padding: "1.5rem" }}>
+        {loading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "3rem",
+              fontSize: "1.125rem",
+              color: "#6b7280",
+            }}
+          >
+            Loading sports...
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              gap: "1.5rem",
+            }}
+          >
+            {sports.map((sport) => (
+              <Card key={sport.id}>
                 <div
                   style={{
+                    aspectRatio: "16/9",
+                    backgroundColor: "#f3f4f6",
                     display: "flex",
                     alignItems: "center",
-                    gap: "1rem",
-                    marginBottom: "0.5rem",
+                    justifyContent: "center",
+                    fontSize: "2rem",
                   }}
                 >
-                  <h3
-                    style={{
-                      fontSize: "1.125rem",
-                      fontWeight: "bold",
-                      color: "#1f2937",
-                      flex: 1,
-                    }}
-                  >
-                    {sport.name}
-                  </h3>
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      fontWeight: "600",
-                      color: "white",
-                      backgroundColor: getCategoryColor(sport.category),
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "9999px",
-                    }}
-                  >
-                    {getCategoryLabel(sport.category)}
-                  </span>
+                  ⚽
                 </div>
-                <p
-                  style={{
-                    color: "#6b7280",
-                    marginBottom: "1rem",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  {sport.description}
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      style={{ flex: 1 }}
-                      onClick={() => setEditingSport(sport)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        if (
-                          confirm("Are you sure you want to delete this sport?")
-                        ) {
-                          setSports(sports.filter((s) => s.id !== sport.id));
-                        }
+                <CardContent style={{ padding: "1.5rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "1rem",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: "1.125rem",
+                        fontWeight: "bold",
+                        color: "#1f2937",
+                        flex: 1,
                       }}
                     >
-                      Delete
+                      {sport.name}
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: "white",
+                        backgroundColor: getCategoryColor(sport.category),
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "9999px",
+                      }}
+                    >
+                      {getCategoryLabel(sport.category)}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      color: "#6b7280",
+                      marginBottom: "1rem",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {sport.description}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        style={{ flex: 1 }}
+                        onClick={() => setEditingSport(sport)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this sport?"
+                            )
+                          ) {
+                            setSports(sports.filter((s) => s.id !== sport.id));
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                    <Button
+                      size="sm"
+                      style={{
+                        backgroundColor: "#8b0000",
+                        width: "100%",
+                      }}
+                      onClick={() => handleManagePlayers(sport)}
+                    >
+                      Manage Players
                     </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    style={{
-                      backgroundColor: "#8b0000",
-                      width: "100%",
-                    }}
-                    onClick={() => handleManagePlayers(sport)}
-                  >
-                    Manage Players
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Add/Edit Sport Form Modal */}
         {(showAddForm || editingSport) && (
@@ -640,7 +679,7 @@ export default function SportsAdmin() {
                     </label>
                     <input
                       type="url"
-                      defaultValue={editingSport?.imageUrl || ""}
+                      defaultValue={editingSport?.image_url || ""}
                       style={{
                         width: "100%",
                         padding: "0.75rem",
@@ -749,14 +788,51 @@ export default function SportsAdmin() {
                       key={player.id}
                       style={{
                         display: "flex",
-                        justifyContent: "space-between",
+                        gap: "1rem",
                         alignItems: "center",
                         padding: "1rem",
                         border: "1px solid #e5e7eb",
                         borderRadius: "0.5rem",
                       }}
                     >
-                      <div>
+                      {/* Player Photo */}
+                      <div
+                        style={{
+                          width: "60px",
+                          height: "60px",
+                          borderRadius: "0.375rem",
+                          overflow: "hidden",
+                          backgroundColor: "#f3f4f6",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {player.photo_url ? (
+                          <img
+                            src={player.photo_url}
+                            alt={`${player.name} photo`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              color: "#9ca3af",
+                              fontSize: "1.25rem",
+                            }}
+                          >
+                            👤
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Player Info */}
+                      <div style={{ flex: 1 }}>
                         <div
                           style={{ fontWeight: "600", fontSize: "1.125rem" }}
                         >
@@ -773,6 +849,8 @@ export default function SportsAdmin() {
                           </div>
                         )}
                       </div>
+
+                      {/* Action Buttons */}
                       <div style={{ display: "flex", gap: "0.5rem" }}>
                         <Button
                           variant="secondary"
@@ -804,648 +882,723 @@ export default function SportsAdmin() {
                     No players found. Add some players to get started.
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-                {/* Add Player Form */}
-                {showAddPlayerForm && (
-                  <Card style={{ marginTop: "1rem" }}>
-                    <CardHeader>
-                      <CardTitle>Add New Player</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <form
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          await handleAddPlayer();
-                        }}
+        {/* Add Player Modal */}
+        {showAddPlayerForm && selectedSport && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <Card
+              style={{
+                width: "90%",
+                maxWidth: "600px",
+                maxHeight: "90vh",
+                overflow: "auto",
+              }}
+            >
+              <CardHeader>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <CardTitle>Add New Player - {selectedSport.name}</CardTitle>
+                  <Button variant="secondary" onClick={closePlayerForms}>
+                    Close
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    await handleAddPlayer();
+                  }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "1rem",
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
                         }}
                       >
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Name *
-                            </label>
-                            <input
-                              name="name"
-                              required
-                              value={playerFormData.name}
-                              onChange={(e) =>
-                                updateFormField("name", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Number *
-                            </label>
-                            <input
-                              name="number"
-                              type="number"
-                              required
-                              value={playerFormData.number || ""}
-                              onChange={(e) =>
-                                updateFormField(
-                                  "number",
-                                  e.target.value
-                                    ? parseInt(e.target.value)
-                                    : null
-                                )
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Position
-                            </label>
-                            <input
-                              name="position"
-                              value={playerFormData.position}
-                              onChange={(e) =>
-                                updateFormField("position", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Year
-                            </label>
-                            <select
-                              name="year"
-                              value={playerFormData.year}
-                              onChange={(e) =>
-                                updateFormField("year", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            >
-                              <option value="">Select Year</option>
-                              <option value="Freshman">Freshman</option>
-                              <option value="Sophomore">Sophomore</option>
-                              <option value="Junior">Junior</option>
-                              <option value="Senior">Senior</option>
-                              <option value="Graduate">Graduate</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Height
-                            </label>
-                            <input
-                              name="height"
-                              placeholder="e.g., 6'2&quot;"
-                              value={playerFormData.height}
-                              onChange={(e) =>
-                                updateFormField("height", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Weight
-                            </label>
-                            <input
-                              name="weight"
-                              placeholder="e.g., 185 lbs"
-                              value={playerFormData.weight}
-                              onChange={(e) =>
-                                updateFormField("weight", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Hometown
-                          </label>
-                          <input
-                            name="hometown"
-                            placeholder="e.g., Chicago, IL"
-                            value={playerFormData.hometown}
-                            onChange={(e) =>
-                              updateFormField("hometown", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                            }}
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Major
-                          </label>
-                          <input
-                            name="major"
-                            placeholder="e.g., Business Administration"
-                            value={playerFormData.major}
-                            onChange={(e) =>
-                              updateFormField("major", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                            }}
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Bio
-                          </label>
-                          <textarea
-                            name="bio"
-                            rows={3}
-                            placeholder="Brief player bio..."
-                            value={playerFormData.bio}
-                            onChange={(e) =>
-                              updateFormField("bio", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                              resize: "vertical",
-                            }}
-                          />
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "1rem",
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={closePlayerForms}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            style={{ backgroundColor: "#8b0000" }}
-                          >
-                            Add Player
-                          </Button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Edit Player Form */}
-                {editingPlayer && (
-                  <Card style={{ marginTop: "1rem" }}>
-                    <CardHeader>
-                      <CardTitle>Edit Player - {editingPlayer.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <form
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          await handleUpdatePlayer();
-                        }}
+                        Name *
+                      </label>
+                      <input
+                        name="name"
+                        required
+                        value={playerFormData.name}
+                        onChange={(e) =>
+                          updateFormField("name", e.target.value)
+                        }
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "1rem",
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
                         }}
                       >
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Name *
-                            </label>
-                            <input
-                              name="name"
-                              required
-                              value={playerFormData.name}
-                              onChange={(e) =>
-                                updateFormField("name", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Number *
-                            </label>
-                            <input
-                              name="number"
-                              type="number"
-                              required
-                              value={playerFormData.number || ""}
-                              onChange={(e) =>
-                                updateFormField(
-                                  "number",
-                                  e.target.value
-                                    ? parseInt(e.target.value)
-                                    : null
-                                )
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                        </div>
+                        Number *
+                      </label>
+                      <input
+                        name="number"
+                        type="number"
+                        required
+                        value={playerFormData.number || ""}
+                        onChange={(e) =>
+                          updateFormField(
+                            "number",
+                            e.target.value ? parseInt(e.target.value) : null
+                          )
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                  </div>
 
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Position
-                            </label>
-                            <input
-                              name="position"
-                              value={playerFormData.position}
-                              onChange={(e) =>
-                                updateFormField("position", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Year
-                            </label>
-                            <select
-                              name="year"
-                              value={playerFormData.year}
-                              onChange={(e) =>
-                                updateFormField("year", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            >
-                              <option value="">Select Year</option>
-                              <option value="Freshman">Freshman</option>
-                              <option value="Sophomore">Sophomore</option>
-                              <option value="Junior">Junior</option>
-                              <option value="Senior">Senior</option>
-                              <option value="Graduate">Graduate</option>
-                            </select>
-                          </div>
-                        </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Position
+                      </label>
+                      <input
+                        name="position"
+                        value={playerFormData.position}
+                        onChange={(e) =>
+                          updateFormField("position", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Year
+                      </label>
+                      <select
+                        name="year"
+                        value={playerFormData.year}
+                        onChange={(e) =>
+                          updateFormField("year", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      >
+                        <option value="">Select Year</option>
+                        <option value="Freshman">Freshman</option>
+                        <option value="Sophomore">Sophomore</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Graduate">Graduate</option>
+                      </select>
+                    </div>
+                  </div>
 
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "1rem",
-                          }}
-                        >
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Height
-                            </label>
-                            <input
-                              name="height"
-                              placeholder="e.g., 6'2&quot;"
-                              value={playerFormData.height}
-                              onChange={(e) =>
-                                updateFormField("height", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                display: "block",
-                                marginBottom: "0.5rem",
-                                fontWeight: "600",
-                              }}
-                            >
-                              Weight
-                            </label>
-                            <input
-                              name="weight"
-                              placeholder="e.g., 185 lbs"
-                              value={playerFormData.weight}
-                              onChange={(e) =>
-                                updateFormField("weight", e.target.value)
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "0.375rem",
-                                fontSize: "1rem",
-                              }}
-                            />
-                          </div>
-                        </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Height
+                      </label>
+                      <input
+                        name="height"
+                        placeholder="e.g., 6'2&quot;"
+                        value={playerFormData.height}
+                        onChange={(e) =>
+                          updateFormField("height", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Weight
+                      </label>
+                      <input
+                        name="weight"
+                        placeholder="e.g., 185 lbs"
+                        value={playerFormData.weight}
+                        onChange={(e) =>
+                          updateFormField("weight", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                  </div>
 
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Hometown
-                          </label>
-                          <input
-                            name="hometown"
-                            placeholder="e.g., Chicago, IL"
-                            value={playerFormData.hometown}
-                            onChange={(e) =>
-                              updateFormField("hometown", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                            }}
-                          />
-                        </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Hometown
+                    </label>
+                    <input
+                      name="hometown"
+                      placeholder="e.g., Chicago, IL"
+                      value={playerFormData.hometown}
+                      onChange={(e) =>
+                        updateFormField("hometown", e.target.value)
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                      }}
+                    />
+                  </div>
 
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Major
-                          </label>
-                          <input
-                            name="major"
-                            placeholder="e.g., Business Administration"
-                            value={playerFormData.major}
-                            onChange={(e) =>
-                              updateFormField("major", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                            }}
-                          />
-                        </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Major
+                    </label>
+                    <input
+                      name="major"
+                      placeholder="e.g., Business Administration"
+                      value={playerFormData.major}
+                      onChange={(e) => updateFormField("major", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                      }}
+                    />
+                  </div>
 
-                        <div>
-                          <label
-                            style={{
-                              display: "block",
-                              marginBottom: "0.5rem",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Bio
-                          </label>
-                          <textarea
-                            name="bio"
-                            rows={3}
-                            placeholder="Brief player bio..."
-                            value={playerFormData.bio}
-                            onChange={(e) =>
-                              updateFormField("bio", e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "0.375rem",
-                              fontSize: "1rem",
-                              resize: "vertical",
-                            }}
-                          />
-                        </div>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Bio
+                    </label>
+                    <textarea
+                      name="bio"
+                      rows={3}
+                      placeholder="Brief player bio..."
+                      value={playerFormData.bio}
+                      onChange={(e) => updateFormField("bio", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
 
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "1rem",
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={closePlayerForms}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            style={{ backgroundColor: "#8b0000" }}
-                          >
-                            Update Player
-                          </Button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
+                  <PhotoUpload
+                    onUploadComplete={(url) =>
+                      updateFormField("photo_url", url)
+                    }
+                    onUploadError={(error) => alert(error)}
+                    onFileSelect={(file) => setSelectedFile(file)}
+                    currentPhotoUrl={playerFormData.photo_url}
+                    teamId={selectedSport.id}
+                    playerId={undefined} // New player, no ID yet
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "1rem",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={closePlayerForms}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      style={{ backgroundColor: "#8b0000" }}
+                    >
+                      Add Player
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Edit Player Modal */}
+        {editingPlayer && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 60,
+            }}
+          >
+            <Card
+              style={{
+                width: "90%",
+                maxWidth: "600px",
+                maxHeight: "90vh",
+                overflow: "auto",
+              }}
+            >
+              <CardHeader>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <CardTitle>Edit Player - {editingPlayer.name}</CardTitle>
+                  <Button variant="secondary" onClick={closePlayerForms}>
+                    Close
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    await handleUpdatePlayer();
+                  }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Name *
+                      </label>
+                      <input
+                        name="name"
+                        required
+                        value={playerFormData.name}
+                        onChange={(e) =>
+                          updateFormField("name", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Number *
+                      </label>
+                      <input
+                        name="number"
+                        type="number"
+                        required
+                        value={playerFormData.number || ""}
+                        onChange={(e) =>
+                          updateFormField(
+                            "number",
+                            e.target.value ? parseInt(e.target.value) : null
+                          )
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Position
+                      </label>
+                      <input
+                        name="position"
+                        value={playerFormData.position}
+                        onChange={(e) =>
+                          updateFormField("position", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Year
+                      </label>
+                      <select
+                        name="year"
+                        value={playerFormData.year}
+                        onChange={(e) =>
+                          updateFormField("year", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      >
+                        <option value="">Select Year</option>
+                        <option value="Freshman">Freshman</option>
+                        <option value="Sophomore">Sophomore</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Graduate">Graduate</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "1rem",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Height
+                      </label>
+                      <input
+                        name="height"
+                        placeholder="e.g., 6'2&quot;"
+                        value={playerFormData.height}
+                        onChange={(e) =>
+                          updateFormField("height", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Weight
+                      </label>
+                      <input
+                        name="weight"
+                        placeholder="e.g., 185 lbs"
+                        value={playerFormData.weight}
+                        onChange={(e) =>
+                          updateFormField("weight", e.target.value)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.375rem",
+                          fontSize: "1rem",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Hometown
+                    </label>
+                    <input
+                      name="hometown"
+                      placeholder="e.g., Chicago, IL"
+                      value={playerFormData.hometown}
+                      onChange={(e) =>
+                        updateFormField("hometown", e.target.value)
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Major
+                    </label>
+                    <input
+                      name="major"
+                      placeholder="e.g., Business Administration"
+                      value={playerFormData.major}
+                      onChange={(e) => updateFormField("major", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "0.5rem",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Bio
+                    </label>
+                    <textarea
+                      name="bio"
+                      rows={3}
+                      placeholder="Brief player bio..."
+                      value={playerFormData.bio}
+                      onChange={(e) => updateFormField("bio", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.375rem",
+                        fontSize: "1rem",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+
+                  <PhotoUpload
+                    onUploadComplete={(url) =>
+                      updateFormField("photo_url", url)
+                    }
+                    onUploadError={(error) => alert(error)}
+                    currentPhotoUrl={playerFormData.photo_url}
+                    teamId={editingPlayer.sport_id}
+                    playerId={editingPlayer.id}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "1rem",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={closePlayerForms}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      style={{ backgroundColor: "#8b0000" }}
+                    >
+                      Update Player
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
           </div>
