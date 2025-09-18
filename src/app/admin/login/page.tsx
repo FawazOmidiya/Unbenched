@@ -11,7 +11,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp] = useState(false);
   const router = useRouter();
   const supabase = createSupabaseClient();
 
@@ -59,7 +59,7 @@ export default function AdminLogin() {
           router.push("/admin");
         }
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);

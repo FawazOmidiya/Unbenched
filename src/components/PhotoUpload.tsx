@@ -60,7 +60,7 @@ export const uploadPlayerPhoto = async (
 
   // Upload directly to final location
   const fileName = `${teamId}/${playerId}.jpg`;
-  const { data, error } = await supabase.storage
+  const { data: _data, error } = await supabase.storage
     .from("players")
     .upload(fileName, compressedFile, {
       cacheControl: "3600",
@@ -183,7 +183,7 @@ export default function PhotoUpload({
 
         // Upload to Supabase storage
         const supabase = createSupabaseClient();
-        const { data, error } = await supabase.storage
+        const { data: _data, error } = await supabase.storage
           .from("players")
           .upload(fileName, compressedFile, {
             cacheControl: "3600",

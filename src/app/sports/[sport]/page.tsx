@@ -132,27 +132,6 @@ export default function SportPage({
     fetchSportData();
   }, [resolvedParams.sport]);
 
-  const upcomingGames = [
-    {
-      opponent: "Rival University",
-      date: "Dec 18, 2024",
-      time: "6:00 PM",
-      location: "Home",
-    },
-    {
-      opponent: "State College",
-      date: "Dec 21, 2024",
-      time: "7:00 PM",
-      location: "Away",
-    },
-    {
-      opponent: "Championship Game",
-      date: "Jan 5, 2025",
-      time: "5:00 PM",
-      location: "Neutral",
-    },
-  ];
-
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "white" }}>
       <Header />

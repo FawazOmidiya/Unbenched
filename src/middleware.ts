@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
         // Redirect to login if not authenticated
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
-    } catch (error) {
+    } catch (_error) {
       // If there's an error, redirect to login
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }

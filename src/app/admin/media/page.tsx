@@ -37,7 +37,6 @@ export default function MediaAdmin() {
   ]);
 
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const formatFileSize = (bytes: number) => {
@@ -49,8 +48,6 @@ export default function MediaAdmin() {
   };
 
   const handleFileUpload = async (files: FileList) => {
-    setUploading(true);
-
     // Simulate file upload
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -67,7 +64,6 @@ export default function MediaAdmin() {
       setMediaFiles((prev) => [newMedia, ...prev]);
     }
 
-    setUploading(false);
     setShowUploadForm(false);
   };
 

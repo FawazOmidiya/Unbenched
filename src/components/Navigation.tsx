@@ -10,7 +10,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
-import { Sport, createSupabaseClient } from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase";
 
 interface SportGroup {
   category: string;
@@ -103,7 +103,7 @@ export default function Navigation() {
                         fontWeight: "500",
                       }}
                     >
-                      Men's Sports
+                      Men&apos;s Sports
                     </div>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
@@ -115,7 +115,7 @@ export default function Navigation() {
                         fontWeight: "500",
                       }}
                     >
-                      Women's Sports
+                      Women&apos;s Sports
                     </div>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
