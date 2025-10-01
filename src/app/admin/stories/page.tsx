@@ -1393,35 +1393,6 @@ export default function AdminStories() {
                     }}
                   />
                 </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "0.5rem",
-                      fontWeight: "500",
-                      color: "#333",
-                    }}
-                  >
-                    Category *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    required
-                    placeholder="e.g., Sports, News, Features"
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0.25rem",
-                      fontSize: "1rem",
-                    }}
-                  />
-                </div>
               </div>
 
               <div
