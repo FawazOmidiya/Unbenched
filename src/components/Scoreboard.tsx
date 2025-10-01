@@ -62,39 +62,43 @@ export default function Scoreboard() {
           <div
             style={{
               textAlign: "center",
-              padding: "2rem 1rem",
+              padding: "1.5rem 1rem",
               color: "#6b7280",
               backgroundColor: "#f9fafb",
               borderRadius: "0.5rem",
               border: "2px dashed #d1d5db",
             }}
+            className="md:p-8"
           >
             <div
               style={{
-                fontSize: "2.5rem",
-                marginBottom: "1rem",
+                fontSize: "2rem",
+                marginBottom: "0.75rem",
                 opacity: 0.5,
               }}
+              className="md:text-4xl md:mb-4"
             >
               🏆
             </div>
             <h3
               style={{
-                fontSize: "1.125rem",
+                fontSize: "1rem",
                 fontWeight: "600",
                 color: "#374151",
                 marginBottom: "0.5rem",
               }}
+              className="md:text-lg"
             >
               No Games Scheduled
             </h3>
             <p
               style={{
-                fontSize: "0.875rem",
+                fontSize: "0.75rem",
                 lineHeight: "1.5",
-                maxWidth: "300px",
+                maxWidth: "250px",
                 margin: "0 auto",
               }}
+              className="md:text-sm md:max-w-xs"
             >
               Check back soon for upcoming games and match results!
             </p>

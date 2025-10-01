@@ -13,14 +13,19 @@ export const createSupabaseClient = () => createClientComponentClient();
 export interface Story {
   id: number;
   title: string;
-  excerpt: string;
-  content?: string;
-  image_url?: string;
-  date: string;
-  category: string;
-  featured: boolean;
+  article: string;
+  banner_image_url?: string;
+  sport_id?: number;
+  game_id?: number;
+  photographer?: string;
+  journalist?: string;
   created_at: string;
   updated_at: string;
+  excerpt: string;
+  date: string;
+  // Joined data
+  sport?: Sport;
+  game?: Game;
 }
 
 export interface Game {
@@ -42,6 +47,7 @@ export interface Sport {
   category: "mens" | "womens" | "other";
   description?: string;
   image_url?: string;
+  slug: string;
   created_at: string;
   updated_at: string;
 }

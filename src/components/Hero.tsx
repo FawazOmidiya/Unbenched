@@ -24,25 +24,30 @@ export default function Hero() {
           position: "relative",
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "4rem 1rem",
+          padding: "2rem 1rem",
         }}
+        className="md:py-16"
       >
         <div style={{ maxWidth: "64rem" }}>
           <h2
             style={{
-              fontSize: "3rem",
+              fontSize: "2rem",
               fontWeight: "bold",
               marginBottom: "1rem",
+              lineHeight: "1.2",
             }}
+            className="md:text-5xl"
           >
             Welcome to Unbenched Athletics
           </h2>
           <p
             style={{
-              fontSize: "1.25rem",
-              marginBottom: "2rem",
+              fontSize: "1rem",
+              marginBottom: "1.5rem",
               color: "#e5e7eb",
+              lineHeight: "1.5",
             }}
+            className="md:text-xl md:mb-8"
           >
             Home of the UTSC Maroons - Excellence in Sports, Leadership, and
             Community

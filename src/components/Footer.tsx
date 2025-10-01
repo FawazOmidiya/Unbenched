@@ -84,7 +84,7 @@ export default function Footer() {
               marginTop: "0.5rem",
             }}
           >
-            © 2024 UTSC Maroons. All rights reserved.
+            © 2024 Unbenched Media. All rights reserved.
           </p>
         </div>
       </div>

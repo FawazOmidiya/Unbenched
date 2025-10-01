@@ -138,39 +138,54 @@ export default function SportPage({
       <Navigation />
 
       <main
-        style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem" }}
+        style={{ maxWidth: "1200px", margin: "0 auto", padding: "1rem" }}
+        className="md:px-4 md:py-8"
       >
         {/* Page Header */}
         <div
           style={{
             background: "linear-gradient(to right, #8b0000, #6b0000)",
             color: "white",
-            padding: "3rem 2rem",
+            padding: "2rem 1rem",
             borderRadius: "0.5rem",
-            marginBottom: "2rem",
+            marginBottom: "1.5rem",
           }}
+          className="md:p-8 md:mb-8"
         >
           <h1
             style={{
-              fontSize: "2.5rem",
+              fontSize: "2rem",
               fontWeight: "bold",
               marginBottom: "0.5rem",
+              lineHeight: "1.2",
             }}
+            className="md:text-4xl"
           >
             {sportName}
           </h1>
-          <p style={{ fontSize: "1.125rem", opacity: 0.9 }}>
+          <p style={{ fontSize: "1rem", opacity: 0.9 }} className="md:text-lg">
             UTSC Maroons {sportName} Team
           </p>
-          <div style={{ display: "flex", gap: "2rem", marginTop: "1.5rem" }}>
+          <div
+            style={{
+              marginTop: "1.5rem",
+            }}
+            className="flex gap-6 justify-center md:justify-start md:gap-8"
+          >
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", fontWeight: "bold" }}>
+              <div
+                style={{ fontSize: "1.5rem", fontWeight: "bold" }}
+                className="md:text-3xl"
+              >
                 {teamStats.wins}
               </div>
               <div style={{ fontSize: "0.875rem", opacity: 0.8 }}>Wins</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "2rem", fontWeight: "bold" }}>
+              <div
+                style={{ fontSize: "1.5rem", fontWeight: "bold" }}
+                className="md:text-3xl"
+              >
                 {teamStats.losses}
               </div>
               <div style={{ fontSize: "0.875rem", opacity: 0.8 }}>Losses</div>
@@ -179,8 +194,8 @@ export default function SportPage({
         </div>
 
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem" }}
-          className="lg:grid-cols-2"
+          style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }}
+          className="lg:grid-cols-2 lg:gap-8"
         >
           {/* Roster */}
           <div
@@ -193,11 +208,12 @@ export default function SportPage({
           >
             <h2
               style={{
-                fontSize: "1.5rem",
+                fontSize: "1.25rem",
                 fontWeight: "bold",
                 color: "#8b0000",
-                marginBottom: "1.5rem",
+                marginBottom: "1rem",
               }}
+              className="md:text-2xl md:mb-6"
             >
               Current Roster
             </h2>
@@ -226,27 +242,21 @@ export default function SportPage({
                     <div
                       key={player.id}
                       style={{
-                        display: "flex",
-                        gap: "1rem",
-                        alignItems: "flex-start",
                         padding: "1rem",
                         border: "1px solid #e5e7eb",
                         borderRadius: "0.5rem",
                       }}
+                      className="flex flex-col gap-4 items-center md:flex-row md:items-start md:gap-4"
                     >
                       {/* Player Photo */}
                       <div
                         style={{
-                          width: "300px",
-                          height: "300px",
                           borderRadius: "0.5rem",
                           overflow: "hidden",
                           backgroundColor: "#f3f4f6",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
                           flexShrink: 0,
                         }}
+                        className="w-30 h-30 flex items-center justify-center md:w-32 md:h-32"
                       >
                         {player.photo_url ? (
                           <img
@@ -271,41 +281,49 @@ export default function SportPage({
                       </div>
 
                       {/* Player Info */}
-                      <div style={{ flex: 1, padding: "0.5rem 0" }}>
+                      <div
+                        style={{
+                          flex: 1,
+                          padding: "0.5rem 0",
+                        }}
+                        className="text-center md:text-left"
+                      >
                         <div
                           style={{
                             fontWeight: "700",
-                            fontSize: "1.5rem",
-                            marginBottom: "0.75rem",
+                            fontSize: "1.25rem",
+                            marginBottom: "0.5rem",
                             color: "#1f2937",
                           }}
+                          className="md:text-2xl md:mb-3"
                         >
                           #{player.number} {player.name}
                         </div>
                         <div
                           style={{
                             color: "#4b5563",
-                            fontSize: "1.125rem",
-                            marginBottom: "1rem",
+                            fontSize: "1rem",
+                            marginBottom: "0.75rem",
                             fontWeight: "500",
                           }}
+                          className="md:text-lg md:mb-4"
                         >
                           {player.position} • {player.year}
                         </div>
                         <div
                           style={{
-                            display: "flex",
-                            gap: "1.5rem",
-                            marginBottom: "1rem",
+                            marginBottom: "0.75rem",
                           }}
+                          className="flex gap-4 justify-center flex-wrap md:justify-start md:gap-6 md:mb-4"
                         >
                           {player.height && (
                             <span
                               style={{
                                 color: "#6b7280",
-                                fontSize: "1rem",
+                                fontSize: "0.875rem",
                                 fontWeight: "500",
                               }}
+                              className="md:text-base"
                             >
                               {player.height}
                             </span>
@@ -314,9 +332,10 @@ export default function SportPage({
                             <span
                               style={{
                                 color: "#6b7280",
-                                fontSize: "1rem",
+                                fontSize: "0.875rem",
                                 fontWeight: "500",
                               }}
+                              className="md:text-base"
                             >
                               {player.weight}
                             </span>
@@ -326,10 +345,11 @@ export default function SportPage({
                           <div
                             style={{
                               color: "#6b7280",
-                              fontSize: "1rem",
-                              marginBottom: "0.75rem",
+                              fontSize: "0.875rem",
+                              marginBottom: "0.5rem",
                               fontWeight: "500",
                             }}
+                            className="md:text-base md:mb-3"
                           >
                             {player.major}
                           </div>
@@ -338,10 +358,11 @@ export default function SportPage({
                           <div
                             style={{
                               color: "#6b7280",
-                              fontSize: "1rem",
-                              marginBottom: "0.75rem",
+                              fontSize: "0.875rem",
+                              marginBottom: "0.5rem",
                               fontWeight: "500",
                             }}
+                            className="md:text-base md:mb-3"
                           >
                             {player.hometown}
                           </div>
@@ -350,12 +371,13 @@ export default function SportPage({
                           <div
                             style={{
                               color: "#6b7280",
-                              fontSize: "1rem",
-                              marginTop: "0.75rem",
+                              fontSize: "0.875rem",
+                              marginTop: "0.5rem",
                               fontStyle: "italic",
                               lineHeight: "1.5",
                               fontWeight: "400",
                             }}
+                            className="md:text-base md:mt-3"
                           >
                             {player.bio}
                           </div>
@@ -367,39 +389,43 @@ export default function SportPage({
                   <div
                     style={{
                       textAlign: "center",
-                      padding: "3rem 2rem",
+                      padding: "2rem 1rem",
                       color: "#6b7280",
                       backgroundColor: "#f9fafb",
                       borderRadius: "0.5rem",
                       border: "2px dashed #d1d5db",
                     }}
+                    className="md:p-8 md:px-6"
                   >
                     <div
                       style={{
-                        fontSize: "3rem",
+                        fontSize: "2.5rem",
                         marginBottom: "1rem",
                         opacity: 0.5,
                       }}
+                      className="md:text-5xl"
                     >
                       ⚽️
                     </div>
                     <h3
                       style={{
-                        fontSize: "1.25rem",
+                        fontSize: "1.125rem",
                         fontWeight: "600",
                         color: "#374151",
                         marginBottom: "0.5rem",
                       }}
+                      className="md:text-xl"
                     >
                       Roster Coming Soon
                     </h3>
                     <p
                       style={{
-                        fontSize: "1rem",
+                        fontSize: "0.875rem",
                         lineHeight: "1.5",
-                        maxWidth: "400px",
+                        maxWidth: "300px",
                         margin: "0 auto",
                       }}
+                      className="md:text-base md:max-w-md"
                     >
                       The {sportName} team roster is being finalized. Check back
                       soon to meet the players!
@@ -421,11 +447,12 @@ export default function SportPage({
           >
             <h2
               style={{
-                fontSize: "1.5rem",
+                fontSize: "1.25rem",
                 fontWeight: "bold",
                 color: "#8b0000",
-                marginBottom: "1.5rem",
+                marginBottom: "1rem",
               }}
+              className="md:text-2xl md:mb-6"
             >
               Upcoming Games
             </h2>
