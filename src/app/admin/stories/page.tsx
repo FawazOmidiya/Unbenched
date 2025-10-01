@@ -179,7 +179,17 @@ export default function AdminStories() {
     try {
       const supabase = createSupabaseClient();
 
-      const updatePayload: any = {
+      const updatePayload: {
+        title: string;
+        article: string;
+        sport_id: number | null;
+        game_id: number | null;
+        photographer: string;
+        journalist: string;
+        excerpt: string;
+        date: string;
+        banner_image_url?: string;
+      } = {
         title: formData.title,
         article: formData.article,
         sport_id: formData.sport_id,
